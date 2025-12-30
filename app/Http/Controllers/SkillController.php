@@ -12,7 +12,9 @@ class SkillController extends Controller
      */
     public function index()
     {
-        //
+        return view('skills.index', [
+            'skills' => Skill::all()
+        ]);
     }
 
     /**
@@ -28,7 +30,12 @@ class SkillController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|unique:skills'
+        ]);
+
+        Skill::create($request->only('name'));
+        return back();
     }
 
     /**

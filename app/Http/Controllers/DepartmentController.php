@@ -12,7 +12,9 @@ class DepartmentController extends Controller
      */
     public function index()
     {
-        //
+        return view('departments.index', [
+            'departments' => Department::all()
+        ]);
     }
 
     /**
@@ -28,7 +30,12 @@ class DepartmentController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|unique:departments'
+        ]);
+
+        Department::create($request->only('name'));
+        return back();
     }
 
     /**

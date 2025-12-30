@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
 use App\Models\Employee;
+use App\Models\Skill;
 use Illuminate\Http\Request;
 
 class EmployeeController extends Controller
@@ -12,7 +14,9 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        //
+        $employees = Employee::with('department', 'skills')->get();
+        $departments = Department::all();
+        return view('employees.index', compact('employees', 'departments'));
     }
 
     /**
@@ -20,7 +24,10 @@ class EmployeeController extends Controller
      */
     public function create()
     {
-        //
+        return view('employees.create', [
+            'departments' => Department::all(),
+            'skills' => Skill::all()
+        ]);
     }
 
     /**
@@ -28,7 +35,18 @@ class EmployeeController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'first_name' => 'required',
+            'last_name' => 'required',
+            'email' => 'required|email|unique:employees',
+            'department_id' => 'required',
+            'skills' => 'nullable|array'
+        ]);
+
+        $employee = Employee::create($data);
+        $employee->skills()->sync($request->skills);
+
+        return redirect()->route('employees.index');
     }
 
     /**
@@ -36,7 +54,7 @@ class EmployeeController extends Controller
      */
     public function show(Employee $employee)
     {
-        //
+        return view('employees.show', compact('employee'));
     }
 
     /**
@@ -44,7 +62,11 @@ class EmployeeController extends Controller
      */
     public function edit(Employee $employee)
     {
-        //
+        return view('employees.edit', [
+            'employee' => $employee,
+            'departments' => Department::all(),
+            'skills' => Skill::all()
+        ]);
     }
 
     /**
@@ -52,7 +74,18 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, Employee $employee)
     {
-        //
+        $data = $request->validate([
+            'first_name' => 'required',
+            'last_name' => 'required',
+            'email' => 'required|email|unique:employees,email,' . $employee->id,
+            'department_id' => 'required',
+            'skills' => 'nullable|array'
+        ]);
+
+        $employee->update($data);
+        $employee->skills()->sync($request->skills ?? []);
+
+        return redirect()->route('employees.index');
     }
 
     /**
@@ -60,6 +93,15 @@ class EmployeeController extends Controller
      */
     public function destroy(Employee $employee)
     {
-        //
+        $employee->delete();
+        return back();
+    }
+
+    // AJAX filter
+    public function filterByDepartment(Request $request)
+    {
+        return Employee::with('department')
+            ->where('department_id', $request->department_id)
+            ->get();
     }
 }
