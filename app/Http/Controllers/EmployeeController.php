@@ -100,8 +100,12 @@ class EmployeeController extends Controller
     // AJAX filter
     public function filterByDepartment(Request $request)
     {
-        return Employee::with('department')
-            ->where('department_id', $request->department_id)
-            ->get();
+        $query = Employee::with('department');
+
+        if ($request->filled('department_id')) {
+            $query->where('department_id', $request->department_id);
+        }
+
+        return $query->get();
     }
 }
